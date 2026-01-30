@@ -47,11 +47,15 @@
 
 - 安装 [cmake](https://cmake.org/download/) 3.26 或以上版本。
 
+  ```bash
+  sudo ./bootstrap/cmake-3.31.11-linux-x86_64.sh --skip-license --prefix=/usr/local --exclude-subdir
+  ```
+
 - 安装 [ONNX Runtime](https://github.com/microsoft/onnxruntime) 。
 
 ```bash
 sudo apt update
-sudo apt install -y build-essential cmake git libprotobuf-dev protobuf-compiler
+sudo apt install -y build-essential git libprotobuf-dev protobuf-compiler
 
 git clone --recursive https://github.com/microsoft/onnxruntime
 
