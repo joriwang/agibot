@@ -137,10 +137,10 @@ If you do not have a joystick controller, you can control the simulation using c
    ```bash
    cd script/sim_control
    
-   # 1. Switch Modes
-   ./set_zero_mode.sh   # Zero Mode (Damping)
-   ./set_stand_mode.sh  # Stand Mode
-   ./set_walk_mode.sh   # Walk Mode
+   # 1. Switch Modes (Strict Execution Order Required)
+   ./set_zero_mode.sh   # Step A: Zero Mode (Initialization)
+   ./set_stand_mode.sh  # Step B: Stand Mode (Required! Wait 3-5s for the robot to stand stable)
+   ./set_walk_mode.sh   # Step C: Walk Mode (Execute only after standing stable)
    
    # 2. Send Movement Commands
    ./move_cmd.sh        # Default: move forward at 0.2m/s

@@ -134,10 +134,10 @@ cd build/
    ```bash
    cd script/sim_control
    
-   # 1. 切换模式
-   ./set_zero_mode.sh   # 阻尼模式
-   ./set_stand_mode.sh  # 站立模式
-   ./set_walk_mode.sh   # 行走模式
+   # 1. 切换模式 (请严格按顺序执行)
+   ./set_zero_mode.sh   # 步骤A: 阻尼模式 (初始化)
+   ./set_stand_mode.sh  # 步骤B: 站立模式 (必选！执行后请等待 3-5 秒待机器人站稳)
+   ./set_walk_mode.sh   # 步骤C: 行走模式 (站稳后方可执行)
    
    # 2. 发送移动指令
    ./move_cmd.sh        # 默认向前 0.2m/s
