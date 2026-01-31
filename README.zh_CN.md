@@ -41,23 +41,21 @@
 
 ## 运行方式
 
+### Requirements
+
+- OS: Ubuntu 22.04
+
 ### 启动准备
 
-- 安装 [GCC-13](https://www.gnu.org/software/gcc/gcc-13/)。
+- 安装 [GCC-13](https://www.gnu.org/software/gcc/gcc-13/)。`sudo bash ./bootstrap/intall_gcc_13.sh`
 
-- 安装 [cmake](https://cmake.org/download/) 3.26 或以上版本。
+- 安装 [cmake](https://cmake.org/download/) 3.26 或以上版本。`sudo ./bootstrap/cmake-3.31.11-linux-x86_64.sh --skip-license --prefix=/usr/local --exclude-subdir`
 
-  ```bash
-  sudo ./bootstrap/cmake-3.31.11-linux-x86_64.sh --skip-license --prefix=/usr/local --exclude-subdir
-  ```
-
-- 安装 [ONNX Runtime](https://github.com/microsoft/onnxruntime) 。
+- 安装 [ONNX Runtime](https://github.com/microsoft/onnxruntime) 。`git clone --recursive --branch v1.22.2 git@gitee.com:jori-wang/zhiyuan-x1-onnx.git onnxruntime`
 
 ```bash
 sudo apt update
 sudo apt install -y build-essential git libprotobuf-dev protobuf-compiler
-
-git clone --recursive https://github.com/microsoft/onnxruntime
 
 cd onnxruntime
 ./build.sh --config Release --build_shared_lib --parallel
