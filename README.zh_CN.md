@@ -47,7 +47,7 @@
 
 ### 启动准备
 
-- 安装 [GCC-13](https://www.gnu.org/software/gcc/gcc-13/)。`sudo bash ./bootstrap/intall_gcc_13.sh`
+- 安装 [GCC-13](https://www.gnu.org/software/gcc/gcc-13/)。`sudo bash ./bootstrap/install_gcc_13.sh`
 
 - 安装 [cmake](https://cmake.org/download/) 3.26 或以上版本。`sudo ./bootstrap/cmake-3.31.11-linux-x86_64.sh --skip-license --prefix=/usr/local --exclude-subdir`
 
