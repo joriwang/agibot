@@ -102,6 +102,51 @@ cd build/
 ./run_sim.sh
 ```
 
+### Simulation Control Without Joystick (Optional)
+
+If you do not have a joystick controller, you can control the simulation using command-line scripts by following these steps.
+
+1. **Modify Configuration**
+   
+   Modify `src/install/linux/bin/cfg/x1_cfg_sim.yaml` (or `build/install/linux/bin/cfg/x1_cfg_sim.yaml`):
+   
+   *   Disable joystick module: Comment out `JoyStickModule`.
+   *   Enable ROS2 subscription: Change `enable_backends` under `sub_topics_options` to `[local, ros2]`.
+
+   ```yaml
+   # ...
+     module:
+       pkgs:
+         - path: ./libpkg1.so
+           enable_modules:
+             # - JoyStickModule  <-- Comment this out
+             - ControlModule
+             - SimModule
+   # ...
+       sub_topics_options:
+         - topic_name: "(.*)"
+           enable_backends: [local, ros2] <-- Add ros2
+   ```
+
+   **Note**: After modifying the source configuration, you need to re-run `./build.sh` to compile.
+
+2. **Use Control Scripts**
+
+   We provide a set of scripts located in `script/sim_control` directory to replace joystick operations.
+
+   ```bash
+   cd script/sim_control
+   
+   # 1. Switch Modes
+   ./set_zero_mode.sh   # Zero Mode (Damping)
+   ./set_stand_mode.sh  # Stand Mode
+   ./set_walk_mode.sh   # Walk Mode
+   
+   # 2. Send Movement Commands
+   ./move_cmd.sh        # Default: move forward at 0.2m/s
+   ./move_cmd.sh 0.3 0 0.2 # Move forward 0.3, no lateral movement, turn left 0.2
+   ```
+
 ### Launch on Real Robot
 
 Export your library path first, **just need to execute once**.

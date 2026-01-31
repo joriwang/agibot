@@ -99,6 +99,51 @@ cd build/
 ./run_sim.sh
 ```
 
+### 无手柄仿真控制 (可选)
+
+如果没有手柄控制器，可以通过以下步骤使用命令行脚本控制仿真。
+
+1. **修改配置**
+   
+   修改 `src/install/linux/bin/cfg/x1_cfg_sim.yaml` (或 `build/install/linux/bin/cfg/x1_cfg_sim.yaml`)：
+   
+   *   禁用手柄模块：注释掉 `JoyStickModule`。
+   *   启用ROS2订阅：将 `sub_topics_options` 下的 `enable_backends` 改为 `[local, ros2]`。
+
+   ```yaml
+   # ...
+     module:
+       pkgs:
+         - path: ./libpkg1.so
+           enable_modules:
+             # - JoyStickModule  <-- 注释掉
+             - ControlModule
+             - SimModule
+   # ...
+       sub_topics_options:
+         - topic_name: "(.*)"
+           enable_backends: [local, ros2] <-- 添加 ros2
+   ```
+
+   **注意**：修改源码配置后需要重新运行 `./build.sh` 编译。
+
+2. **使用控制脚本**
+
+   我们提供了一组脚本位于 `script/sim_control` 目录下，用于替代手柄操作。
+
+   ```bash
+   cd script/sim_control
+   
+   # 1. 切换模式
+   ./set_zero_mode.sh   # 阻尼模式
+   ./set_stand_mode.sh  # 站立模式
+   ./set_walk_mode.sh   # 行走模式
+   
+   # 2. 发送移动指令
+   ./move_cmd.sh        # 默认向前 0.2m/s
+   ./move_cmd.sh 0.3 0 0.2 # 前进 0.3, 无横移, 左转 0.2
+   ```
+
 ### 启动真机
 
 首先导出当前动态库路径, **此操作只需要执行一次即可**.
