@@ -34,7 +34,7 @@ aimrt:
         enable_backends: [local, ros2]
     sub_topics_options: # 为 subscribe topic 选择后端
       - topic_name: "(.*)"
-        enable_backends: [local]
+        enable_backends: [local, ros2]
   rpc: # rpc相关配置
     backends: # rpc后端配置
       - type: local
