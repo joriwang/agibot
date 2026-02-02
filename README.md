@@ -43,9 +43,13 @@ For detailed annotations of modules, please refer to the [Development Guide](doc
 
 ## Running Instructions
 
+### Requirements
+
+- OS: Ubuntu 22.04
+
 ### Preparation for Launch
 
-- Install [GCC-13](https://www.gnu.org/software/gcc/gcc-13/).
+- Install [GCC-13](https://www.gnu.org/software/gcc/gcc-13/). `sudo bash ./bootstrap/install_gcc_13.sh`
 
 - Install [cmake](https://cmake.org/download/) (version 3.26 or above).
 
@@ -53,13 +57,11 @@ For detailed annotations of modules, please refer to the [Development Guide](doc
   sudo ./bootstrap/cmake-3.31.11-linux-x86_64.sh --skip-license --prefix=/usr/local --exclude-subdir
   ```
 
-- Install [ONNX Runtime](https://github.com/microsoft/onnxruntime).
+- Install [ONNX Runtime](https://github.com/microsoft/onnxruntime). `git clone --recursive --branch v1.22.2 https://github.com/microsoft/onnxruntime onnxruntime`
 
 ```bash
 sudo apt update
 sudo apt install -y build-essential git libprotobuf-dev protobuf-compiler
-
-git clone --recursive https://github.com/microsoft/onnxruntime
 
 cd onnxruntime
 ./build.sh --config Release --build_shared_lib --parallel
@@ -95,14 +97,7 @@ source url_gitee.bashrc
 
 ### Launch Simulation
 
-Before starting, it is necessary to connect the handle receiver.
-
-```bash
-cd build/
-./run_sim.sh
-```
-
-### Simulation Control Without Joystick (Optional)
+#### Simulation Control Without Joystick (Default)
 
 If you do not have a joystick controller, you can control the simulation using command-line scripts by following these steps.
 
@@ -146,6 +141,17 @@ If you do not have a joystick controller, you can control the simulation using c
    ./move_cmd.sh        # Default: move forward at 0.2m/s
    ./move_cmd.sh 0.3 0 0.2 # Move forward 0.3, no lateral movement, turn left 0.2
    ```
+
+#### Simulation Control With Joystick (Optional)
+
+Before starting, it is necessary to connect the handle receiver.
+
+#### Start Simulation
+
+```bash
+cd build/
+./run_sim.sh
+```
 
 ### Launch on Real Robot
 
