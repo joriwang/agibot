@@ -126,7 +126,7 @@ actuator_name_list_ ← 执行器名列表
 | 4 | 遍历每个 DCU 的 3 个通道，调用 `AttachActuator()` | 创建执行器并绑定到 DCU 的 CANFD 数据区 |
 | 5 | `SetRealtime(rt_priority, bind_cpu)` | 设置实时线程参数 |
 | 6 | `Start(ifname, cycle_ns, enable_dc)` | **启动 EtherCAT 通信** |
-| 7 | `EnableActuator()` 逐个使能 | 发送使能命令并等待反馈 |
+| 7 | `EnableActuator()` 逐个使能 | 按 `actuator_name_list_` 顺序串行使能，详见 [使能流程详解](#522-enableactuator-详解) |
 | 8 | `SetMitCmd(name, 0,0,0,0,0)` | 将所有执行器的命令缓存归零 |
 | 9 | `ApplyDcuImuOffset()` | 对使能了 IMU 的 DCU 执行零偏标定 |
 
@@ -227,11 +227,84 @@ stateDiagram-v2
 | imu_cmd (1B) | imu: acc(12B) + gyro(12B) + quat(16B) |
 | reserved (44B) | reserved (8B) |
 
-执行器使能流程：
-1. `actr->RequestState(STATE_ENABLE)` → 写入 send buffer
-2. `SetChannelId()` → 设置 CANFD 通道的目标 ID
-3. WorkLoop 自动将数据发送给 DCU
-4. 轮询 `actr->GetPowerState()` 等待 STATE_ENABLE 反馈 (超时 1s)
+#### 5.1 CANFD 通道 ctrl 寻址机制
+
+> [dcu.cpp:74-76](file:///home/jori/Project/zhiyuan-x1-infer/src/module/dcu_driver_module/xyber_controller/xyber_api/src/dcu.cpp#L74-L76)
+
+`ctrl` 字段（`uint8_t`）采用**位掩码（bitmask）**编码来寻址目标执行器：
+
+```cpp
+void Dcu::SetChannelId(CtrlChannel ch, uint8_t id) {
+  send_buf_.canfd[(int)ch].ctrl = id == CHANNEL_BROADCAST_ID ? id : 1 << (id - 1);
+}
+```
+
+| `can_id` | `1 << (id-1)` | 二进制 | 十六进制 | 说明 |
+|----------|---------------|--------|---------|------|
+| 1 | `1 << 0` | `0000 0001` | `0x01` | |
+| 2 | `1 << 1` | `0000 0010` | `0x02` | |
+| 3 | `1 << 2` | `0000 0100` | `0x04` | |
+| 4 | `1 << 3` | `0000 1000` | `0x08` | |
+| 5 | `1 << 4` | `0001 0000` | `0x10` | 不与任何特殊值冲突 |
+| 6 | `1 << 5` | `0010 0000` | `0x20` | |
+| 7 | `1 << 6` | `0100 0000` | `0x40` | |
+| 8 | `1 << 7` | `1000 0000` | `0x80` | |
+| 0xFF | broadcast | `1111 1111` | `0xFF` | 广播所有设备 |
+
+> [!NOTE]
+> `SetChannelId` 是**赋值操作**（`=`），不是位或（`|=`），每次调用完整覆盖 `ctrl` 字段。
+> 这不会造成问题，因为：
+> - **使能时**：串行逐个执行，写入 → 等待回应 → 下一个 |
+> - **运行时** `SetMitCmd`：使用 `CHANNEL_BROADCAST_ID`（`0xFF`），不走位掩码分支
+
+#### 5.2 执行器使能流程
+
+##### 5.2.1 遍历顺序
+
+> [dcu_driver_module.cc:119-134](file:///home/jori/Project/zhiyuan-x1-infer/src/module/dcu_driver_module/src/dcu_driver_module.cc#L119-L134)
+
+```cpp
+for (const auto name : actuator_name_list_) {   // ← 按 actuator_name_list_ 顺序
+    if (!xyber_ctrl_->EnableActuator(name)) { ret = false; }
+}
+```
+
+遍历顺序 = YAML `actuator_list` 的声明顺序（**不是** `can_id` 顺序，也不按 DCU 分组），是跨 DCU、跨通道的扁平列表：
+
+```
+left_hip_pitch → left_hip_roll → ... → left_ankle_right    (hip DCU ch1)
+→ right_hip_pitch → ... → right_ankle_right                (hip DCU ch2)
+→ lumbar_left → lumbar_right → lumbar_yaw                  (body ch3 + hip ch3)
+→ left_shoulder_pitch → ... → left_claw                    (body DCU ch1)
+→ right_shoulder_pitch → ... → right_claw                  (body DCU ch2)
+```
+
+> [!IMPORTANT]
+> 使能失败**不中断**循环 — 仅标记 `ret = false`，继续尝试后续执行器。全部遍历后统一检查并抛异常。
+
+##### 5.2.2 EnableActuator 详解
+
+> [dcu.cpp:111-139](file:///home/jori/Project/zhiyuan-x1-infer/src/module/dcu_driver_module/xyber_controller/xyber_api/src/dcu.cpp#L111-L139)
+
+完整流程：
+
+1. `POWER_FLOW_L28` / `OMNI_PICKER` 类型直接 `return true`（无需使能）
+2. 加锁写入 `actr->RequestState(STATE_ENABLE)` + `SetChannelId(ch, id)`
+3. WorkLoop 线程自动将 send_buf 发往 DCU 硬件
+4. 轮询等待反馈：每 **10ms** 检查一次 `actr->GetPowerState()`，最多 **100 轮 = 1 秒**超时
+5. 成功返回 `true`，超时返回 `false`
+
+| 条件 | 行为 |
+|------|------|
+| `POWER_FLOW_L28` / `OMNI_PICKER` | 跳过，直接 `return true` |
+| 1 秒内收到 `STATE_ENABLE` | 提前 break，`return true` |
+| 1 秒内未收到使能确认 | 打印 ERROR，`return false` |
+
+##### 5.2.3 最坏耗时估算
+
+实际配置中 31 个执行器，去除 4 个 `POWER_FLOW_L28` + 4 个 `OMNI_PICKER` = **23 个需要使能**（R86/R52 类型）。
+- 正常情况：每个执行器约 10~50ms 完成使能，总计 ~1s
+- 最坏情况（全部超时）：23 × 1s = **~23 秒**
 
 ### 第 6 层：ControlModule — 上层控制
 
@@ -308,3 +381,9 @@ graph LR
 
 如果执行器使能在 EtherCAT `Start()` 之前调用，将因为没有通信通道而失败。
 如果传动层在 DCU 初始化之前创建，将无法获取有效的执行器数据空间。
+
+### 4. CANFD ctrl 寻址安全性
+
+`ctrl` 字段使用 `1 << (id - 1)` 位掩码编码，`can_id` 范围 1~8 正好映射到 `uint8_t` 的 bit0~bit7，**无冲突、无溢出**。
+
+运行时 `SetMitCmd` 一律使用广播 `0xFF`，64 字节 `data` 中每个执行器占 `ACTUATOR_FRAME_SIZE`（8B）的固定 slot，通过 `send_buf + 8 * (id - 1)` 定位，不受 `ctrl` 字段影响。因此 `ctrl` 的覆盖语义在运行时不构成风险。
