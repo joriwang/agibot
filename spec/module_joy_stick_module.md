@@ -8,6 +8,17 @@
 
 ---
 
+## 相关文档
+
+| 文档 | 说明 | 关系 |
+|------|------|------|
+| [l0_system_architecture.md](l0_system_architecture.md) | L0 系统架构（§3.3 JoyStickModule 描述） | 上游架构 |
+| [module_control_module.md](module_control_module.md) | ControlModule（消费 `/cmd_vel_limiter` 和模式 Topic） | 协作模块 |
+| [protocol_joystick_data.md](protocol_joystick_data.md) | JoyStickData 协议规格 | 内部协议 |
+| [protocol_joystick_state.md](protocol_joystick_state.md) | JoyStickState 协议规格 | 内部协议 |
+
+---
+
 ## 1. 模块概述
 
 ### 1.1 职责
@@ -422,3 +433,17 @@ twist_pubs:
 | **yaml-cpp** | 读取 `joy_x1.yaml` 配置 |
 | **AimRT** | 模块生命周期、Channel Publisher、Executor |
 | **ROS2 msgs** | `std_msgs/Float32`, `geometry_msgs/Twist`, `std_srvs/Empty` |
+
+## 10. 测试标准（Test Criteria）
+
+| 编号 | 测试项 | 验证方法 | 通过条件 |
+|------|--------|---------|---------|
+| TC-JS-01 | 模式切换按键映射 | 按下 button[7]，订阅 `/idle_mode` | 在下一个 20 Hz 周期内收到 `Float32(data=0.0)` |
+| TC-JS-02 | 速度限幅上界 | 摇杆轴推至最大，订阅 `/cmd_vel_limiter` | 经若干周期后，`linear.x` ≤ 0.5 m/s，`linear.y` ≤ 0.3 m/s，`angular.z` ≤ 0.5 rad/s |
+| TC-JS-03 | 摇杆死区 | 摇杆在死区内（< 5% 偏转），订阅 `/cmd_vel` | `linear.x == 0`，`linear.y == 0`，`angular.z == 0` |
+| TC-JS-04 | 使能键未按时不发布 | 不按 button[4]，订阅 `/cmd_vel` 和 `/cmd_vel_limiter` | 两个 Topic 均无消息发布 |
+| TC-JS-05 | 发布频率 | button[4] 持续按住 1 秒，统计 `/cmd_vel_limiter` 消息数 | 频率在 20 ± 2 Hz 范围内 |
+| TC-JS-06 | 手柄未连接时进程稳定性 | 无手柄连接的情况下启动模块 | 模块应打印 WARN 或等待手柄连接，不崩溃（注：当前存在已知缺陷 P-01，需先修复） |
+| TC-JS-07 | 多键 AND 逻辑 | 配置需要同时按下 button[A] 和 button[B] 才触发的 Topic | 仅按 A 或仅按 B 时不发布；同时按下时发布 |
+
+---

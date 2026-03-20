@@ -10,6 +10,18 @@
 
 ---
 
+## 相关文档
+
+| 文档 | 说明 | 关系 |
+|------|------|------|
+| [l0_system_architecture.md](l0_system_architecture.md) | L0 系统架构（§3.1 ControlModule 描述） | 上游架构 |
+| [protocol_joint_command.md](protocol_joint_command.md) | JointCommand 协议规格（发布到 `/joint_cmd`） | 发布协议 |
+| [module_dcu_driver_module.md](module_dcu_driver_module.md) | DcuDriverModule（消费 `/joint_cmd`，提供 `/joint_states` / `/imu/data`） | 协作模块 |
+| [module_sim_module.md](module_sim_module.md) | SimModule（仿真模式下替代 DcuDriverModule） | 协作模块 |
+| [module_joy_stick_module.md](module_joy_stick_module.md) | JoyStickModule（提供 `/cmd_vel_limiter` 和模式触发 Topic） | 协作模块 |
+
+---
+
 ## 1. 模块定位
 
 ControlModule 是系统的**核心控制模块**，负责：
@@ -667,6 +679,23 @@ ControlModule   ──► /joint_cmd      ──► SimModule（仿真）
 外部 ROS2 节点  ──► /xxx_mode       ──► ControlModule（状态切换，1s 节流）
 外部 ROS2 节点  ──► /cmd_vel_limiter ──► ControlModule（直接速度控制）
 ```
+
+---
+
+## 13. 测试标准（Test Criteria）
+
+| 编号 | 测试项 | 验证方法 | 通过条件 |
+|------|--------|---------|---------|
+| TC-CM-01 | 初始状态安全 | 启动后立即订阅 `/joint_cmd` | `stiffness` 和 `damping` 所有分量为 0（`idle` 状态，Kp=Kd=0） |
+| TC-CM-02 | 状态转换合法路径 | 依次触发 `/zero_mode` → `/stand_mode` → `/walk_mode` | 每次状态转换成功，joint_cmd 的控制器链更新正确 |
+| TC-CM-03 | 状态转换非法路径 | 在 `idle` 状态下直接触发 `/walk_mode` | 状态不发生变化，系统维持 `idle` |
+| TC-CM-04 | 节流器 | 在 1s 内连续触发 `/zero_mode` 5 次 | 状态只切换一次，其余 4 次被静默忽略 |
+| TC-CM-05 | 过渡模式时间 | 触发 `zero` 状态，测量从触发到关节角达到目标值所需时间 | 在 2000 ± 100 ms 内完成过渡 |
+| TC-CM-06 | 控制器合并覆盖 | 配置包含 `[pd_zero, pd_stand]` 的状态，对同一关节检查最终 joint_cmd | `stiffness`/`damping` 值与 `pd_stand` 配置一致（非 `pd_zero` 的值） |
+| TC-CM-07 | 关节偏移透明性 | 配置非零 `joint_offset`，观察发布的 joint_cmd | 对同一控制器目标角，`joint_cmd.position[i]` = 控制器输出 + offset |
+| TC-CM-08 | RL 推理降采样 | 以 1000 Hz 运行 1 秒，统计 ONNX 推理调用次数 | 调用次数 ≈ 100 次（每 10 帧一次） |
+| TC-CM-09 | 发布频率 | 以 1 秒为窗口统计 `/joint_cmd` 消息数 | 频率在 1000 ± 50 Hz 范围内 |
+| TC-CM-10 | 关节状态缺失时鲁棒性 | 发布缺少某关节名的 `/joint_states` 消息 | 触发 `std::out_of_range` 异常（预期行为，见 §8）；测试前需在配置中移除该关节 |
 
 ---
 

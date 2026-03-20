@@ -8,6 +8,27 @@
 
 ---
 
+## 相关文档
+
+### L1 模块规格
+
+| 模块 | 规格文档 | 说明 |
+|------|---------|------|
+| ControlModule | [module_control_module.md](module_control_module.md) | RL 控制、状态机、控制器链 |
+| DcuDriverModule | [module_dcu_driver_module.md](module_dcu_driver_module.md) | EtherCAT 驱动、传动层 |
+| JoyStickModule | [module_joy_stick_module.md](module_joy_stick_module.md) | 手柄输入、速度限幅 |
+| SimModule | [module_sim_module.md](module_sim_module.md) | MuJoCo 物理仿真 |
+
+### L2 协议规格
+
+| 协议 | 规格文档 | 说明 |
+|------|---------|------|
+| JointCommand | [protocol_joint_command.md](protocol_joint_command.md) | 关节控制指令（ControlModule → DCU/Sim） |
+| JoyStickData | [protocol_joystick_data.md](protocol_joystick_data.md) | 手柄原始数据 |
+| JoyStickState | [protocol_joystick_state.md](protocol_joystick_state.md) | 手柄连接状态 |
+
+---
+
 ## 1. 系统概述
 
 ### 1.1 系统定位

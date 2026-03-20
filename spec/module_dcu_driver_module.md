@@ -10,6 +10,16 @@
 
 ---
 
+## 相关文档
+
+| 文档 | 说明 | 关系 |
+|------|------|------|
+| [l0_system_architecture.md](l0_system_architecture.md) | L0 系统架构（§3.2 DcuDriverModule 描述） | 上游架构 |
+| [protocol_joint_command.md](protocol_joint_command.md) | JointCommand 协议规格（订阅 `/joint_cmd`） | 消费协议 |
+| [module_control_module.md](module_control_module.md) | ControlModule（发布 `/joint_cmd`，消费 `/joint_states` / `/imu/data`） | 协作模块 |
+
+---
+
 ## 1. 模块定位
 
 DcuDriverModule 是系统的**硬件驱动模块**，负责：
@@ -475,3 +485,18 @@ double taum6 = actr_left_.handle->state.velocity * actr_left_.direction;
 | BUG-01 | — | 所有并联传动的 taum6 使用 state.velocity 而非 state.effort | **新发现** |
 | BUG-02 | — | 脚踝越界时无异常处理，位置输出为 0 | **新发现** |
 | BUG-03 | — | 传动奇异构型时分母为零无保护 | **新发现** |
+
+## 13. 测试标准（Test Criteria）
+
+| 编号 | 测试项 | 验证方法 | 通过条件 |
+|------|--------|---------|---------|
+| TC-DCU-01 | SimpleTransmission 正确性 | 对已知执行器角度输入，检查 `/joint_states` 中对应关节角 | `joint_angle = actuator_angle × direction`（误差 < 1e-6 rad） |
+| TC-DCU-02 | JointState 完整性 | 订阅 `/joint_states` 消息，检查 `name` 字段 | 包含 `joint_list` 配置中的全部 31 个关节名，顺序一致 |
+| TC-DCU-03 | IMU 单位转换 | 对比 hip DCU 原始 gyro 数据（deg/s）与 `/imu/data` 中 `angular_velocity` | `angular_velocity = gyro_raw × π / 180`（误差 < 1e-6 rad/s） |
+| TC-DCU-04 | 发布频率 | 以 1 秒为窗口统计 `/joint_states` 和 `/imu/data` 消息数 | 两个 Topic 频率均在 1000 ± 50 Hz 范围内 |
+| TC-DCU-05 | 关节指令透传 | 发布已知的 `/joint_cmd`，验证 EtherCAT SetMitCmd 调用参数 | 执行器收到的位置/速度/力矩指令与 JointCommand 消息经传动转换后的期望值一致 |
+| TC-DCU-06 | 未知关节容错 | 在 `/joint_cmd` 中包含 `joint_list` 之外的关节名 | 模块发出 WARN 日志，跳过该关节，其余关节正常处理 |
+| TC-DCU-07 | 脚踝并联传动位置正确性 | 在已知执行器角度（查表范围内）下检查脚踝关节角输出 | 与离线查表计算结果误差 < 0.01 rad |
+| TC-DCU-08 | Shutdown 安全 | 正常启动后发送终止信号 | `DisableAllActuator()` 被调用（执行器失能），后 `XyberController::Stop()` 完成，无崩溃 |
+
+---

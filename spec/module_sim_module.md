@@ -7,6 +7,17 @@
 
 ---
 
+## 相关文档
+
+| 文档 | 说明 | 关系 |
+|------|------|------|
+| [l0_system_architecture.md](l0_system_architecture.md) | L0 系统架构（§3.4 SimModule 描述） | 上游架构 |
+| [protocol_joint_command.md](protocol_joint_command.md) | JointCommand 协议规格（订阅 `/joint_cmd`） | 消费协议 |
+| [module_control_module.md](module_control_module.md) | ControlModule（发布 `/joint_cmd`，消费 `/joint_states` / `/imu/data`） | 协作模块 |
+| [module_dcu_driver_module.md](module_dcu_driver_module.md) | DcuDriverModule（真机模式对应物，接口对比见 §8） | 参考对比 |
+
+---
+
 ## 1. 模块概述
 
 ### 1.1 职责
@@ -469,3 +480,15 @@ GlfwAdapter 构造：
 | 执行器力矩范围 | MJCF 中定义（各关节 ±18~150 N·m） | 硬件执行器物理限制 |
 | 噪声建模 | OU 过程控制噪声（GUI 实时可调） | 无 |
 | 关节索引 | 由 `joint_names_` 顺序决定 | 由 DCU 配置文件的 `actuator_list` 决定 |
+
+## 9. 测试标准（Test Criteria）
+
+| 编号 | 测试项 | 验证方法 | 通过条件 |
+|------|--------|---------|---------|
+| TC-SIM-01 | 控制闭环 | 仿真模式下发布一条 `/joint_cmd`（3s 冷却后），订阅 `/joint_states` 和 `/imu/data` | 在同一帧内（< 2 ms）收到两个 Topic 的回复消息 |
+| TC-SIM-02 | 启动冷却期丢弃 | 启动后 3s 内发布 `/joint_cmd`，观察 `/joint_states` | 无回复消息；3s 后的第一条指令才触发仿真步进 |
+| TC-SIM-03 | PD 力矩计算正确性 | 以已知 Kp=100, Kd=1, target_q=0.5 rad, q=0.0 rad 发布 joint_cmd | 仿真模型中对应关节的 `d->ctrl` = 100×(0.5-0) + 1×(0-dq) + 0 |
+| TC-SIM-04 | 关节状态完整性 | 订阅 `/joint_states` | `name` 字段包含 29 个关节名，顺序与 MJCF 中 `hinge` 关节定义顺序一致 |
+| TC-SIM-05 | IMU 方向数据 | 机器人在初始站立姿态下读取 `/imu/data` | `orientation.w ≈ 1.0`，`orientation.x/y/z ≈ 0`（直立时四元数接近单位四元数） |
+| TC-SIM-06 | 关节名缺失时行为 | 发布缺少某关节名的 `/joint_cmd` | 缺失关节的 `d->ctrl` 索引为 0（已知缺陷 E-04），其余关节正常控制 |
+| TC-SIM-07 | GLFW 渲染线程独立性 | 关闭 GLFW 渲染窗口后，仿真和 Channel 发布是否继续 | 渲染窗口关闭后，AimRT 框架应检测到 `exitrequest` 并优雅退出，不影响其他模块 |
