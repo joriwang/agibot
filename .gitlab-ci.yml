@@ -23,7 +23,10 @@ variables:
 # ---------------------------------------------------------------------------
 spec-sync-check:
   stage: spec-sync-check
-  image: alpine:3.20
+  image: itools-harbor.weichai.com/hub/alpine:3.20
+  tags:
+    - docker
+    - 122-outer
   before_script:
     - apk add --no-cache bash git
   script:
@@ -39,6 +42,9 @@ spec-sync-check:
 ai-review:
   stage: ai-review
   image: itools-harbor.weichai.com/common/ubuntu:22.04-opencode1.2.27-node22.22.1-git2.34.1-python3.10.12-pip3
+  tags:
+    - docker
+    - 122-outer
   needs:
     - job: spec-sync-check
       optional: false
