@@ -1,0 +1,73 @@
+# =============================================================================
+# AgiBot X1 Infer — CI/CD Pipeline with AI Code Review
+# =============================================================================
+# Two-stage pipeline:
+#   Stage 1 (spec-sync-check): Deterministic rule checks — hard block on failure
+#   Stage 2 (ai-review): OpenCode-powered deep review — CRITICAL findings block
+# =============================================================================
+
+stages:
+  - spec-sync-check
+  - ai-review
+
+variables:
+  # OpenCode model configuration (override in CI/CD Variables for switching)
+  OPENCODE_MODEL: "openrouter/anthropic/claude-sonnet-4.6"
+  # Max agent iterations to control cost
+  OPENCODE_MAX_ITERATIONS: "30"
+  # GitLab API for posting MR comments
+  GITLAB_API_URL: "https://itools.weichai.com/git/api/v4"
+
+# ---------------------------------------------------------------------------
+# Stage 1: Deterministic Rule Checks
+# ---------------------------------------------------------------------------
+spec-sync-check:
+  stage: spec-sync-check
+  image: alpine:3.20
+  before_script:
+    - apk add --no-cache bash git
+  script:
+    - bash scripts/ci/spec_sync_check.sh
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+  allow_failure: false
+
+# ---------------------------------------------------------------------------
+# Stage 2: AI-Powered Deep Review (OpenCode + Claude Sonnet)
+# ---------------------------------------------------------------------------
+ai-review:
+  stage: ai-review
+  image: itools-harbor.weichai.com/common/ubuntu:22.04-opencode1.2.27-node22.22.1-git2.34.1-python3.10.12-pip3
+  needs:
+    - job: spec-sync-check
+      optional: false
+  before_script:
+    - pip3 install -i http://mirrors.weichai.com/repository/pypi/simple/ --trusted-host mirrors.weichai.com requests --break-system-packages -q
+    # Configure OpenCode authentication
+    - |
+      mkdir -p ~/.local/share/opencode
+      cat > ~/.local/share/opencode/auth.json << EOF
+      {
+        "openrouter": { "apiKey": "${OPENROUTER_KEY}" }
+      }
+      EOF
+  script:
+    - bash scripts/ci/ai_review.sh
+  after_script:
+    # Always try to post results, even if ai_review.sh failed
+    - |
+      if [ -f /tmp/review_result.json ]; then
+        python3 scripts/ci/post_review.py
+      fi
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+  allow_failure: false
+  variables:
+    # Pass MR info to scripts
+    MR_IID: "${CI_MERGE_REQUEST_IID}"
+    MR_PROJECT_ID: "${CI_PROJECT_ID}"
+    MR_SOURCE_BRANCH: "${CI_MERGE_REQUEST_SOURCE_BRANCH_SHA}"
+    MR_TARGET_BRANCH: "${CI_MERGE_REQUEST_TARGET_BRANCH_SHA}"
+    PRIVATE_TOKEN: "kSWTmyfr-CgfLwz3VriE"

@@ -1,0 +1,44 @@
+# =============================================================================
+# AI Review Configuration
+# =============================================================================
+# Maps source paths to their corresponding spec files.
+# Used by both the rule check script and the AI review agent.
+
+# Source directory → Spec file mapping
+module_spec_map:
+  src/module/control_module: spec/module_control_module.md
+  src/module/dcu_driver_module: spec/module_dcu_driver_module.md
+  src/module/joy_stick_module: spec/module_joy_stick_module.md
+  src/module/sim_module: spec/module_sim_module.md
+
+# Protocol source directory → Spec file prefix
+protocol_spec:
+  source_dir: src/protocols
+  spec_prefix: spec/protocol_
+
+# Files exempt from spec sync requirement (glob patterns)
+exempt_patterns:
+  - "*_test.cc"
+  - "*_test.cpp"
+  - "*.md"
+  - ".clang-format"
+  - ".cmake-format.py"
+  - ".pycodestyle"
+  - ".gitignore"
+
+# AI review model configuration
+# Override in GitLab CI/CD Variables: OPENCODE_MODEL
+models:
+  default: openrouter/anthropic/claude-sonnet-4.5
+  alternatives:
+    - google/gemini-3.1-pro
+    - qwen/qwen3.5-397b-a17b
+
+# Cost control
+max_iterations: 30
+
+# Severity thresholds
+# CRITICAL findings block merge (unless overridden)
+# WARNING and INFO are informational only
+blocking_severities:
+  - CRITICAL
