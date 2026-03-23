@@ -17,7 +17,7 @@ variables:
   OPENCODE_MAX_ITERATIONS: "30"
   # GitLab API for posting MR comments
   GITLAB_API_URL: "https://itools.weichai.com/git/api/v4"
-  OPENROUTER_API_KEY: "$OPENROUTER_KEY"
+  OPENROUTER_API_KEY: "${OPENROUTER_KEY}"
 
 # ---------------------------------------------------------------------------
 # Stage 1: Deterministic Rule Checks
@@ -49,10 +49,9 @@ ai-review:
       optional: false
   before_script:
     - pip3 install -i http://mirrors.weichai.com/repository/pypi/simple/ --trusted-host mirrors.weichai.com requests -q
-    - echo $OPENROUTER_API_KEY
   script:
     - opencode agent list | grep review
-    # - bash script/ci/ai_review.sh
+    - bash script/ci/ai_review.sh
   after_script:
     # Always try to post results, even if ai_review.sh failed
     - |
