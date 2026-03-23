@@ -28,7 +28,7 @@ spec-sync-check:
     - docker
     - 122-outer
   script:
-    - bash scripts/ci/spec_sync_check.sh
+    - bash ./script/ci/spec_sync_check.sh
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_PIPELINE_SOURCE == "push"'
@@ -57,7 +57,7 @@ ai-review:
       }
       EOF
   script:
-    - bash scripts/ci/ai_review.sh
+    - bash script/ci/ai_review.sh
   after_script:
     # Always try to post results, even if ai_review.sh failed
     - |
