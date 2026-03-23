@@ -1,6 +1,0 @@
-# OpenCode project configuration for AgiBot X1 Infer
-# See: https://opencode.ai/docs/configuration/
-
-# Default model for interactive use
-provider: openrouter
-model: anthropic/claude-sonnet-4.6

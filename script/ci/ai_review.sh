@@ -7,8 +7,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-RESULT_FILE="/tmp/review_result.json"
-REVIEW_LOG="/tmp/review_output.log"
+RESULT_FILE=".opencode/review_result.json"
+REVIEW_LOG=".opencode/review_output.log"
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -63,7 +63,7 @@ Instructions:
 2. Read the spec files that correspond to the changed modules.
 3. Read \`spec/bugs.md\` for known bug patterns.
 4. Perform the four-category review as defined in your agent instructions.
-5. Write the JSON result to /tmp/review_result.json.
+5. Write the JSON result to .opencode/review_result.json.
 
 Focus your review on the changed files only. Do not review unchanged code."
 
@@ -74,9 +74,12 @@ echo "Running OpenCode review agent..."
 echo ""
 
 # Use opencode run with the review agent in non-interactive mode
+# Model is configured in .opencode/agents/review.md and .opencode/opencode.json
+# The OPENCODE_MODEL env var can override via opencode's --model flag
+# Format: openrouter/anthropic/claude-sonnet-4.6 (provider/model)
 opencode run \
   --agent review \
-  --model "$(echo "$MODEL" | cut -d/ -f2-)" \
+  --model "$MODEL" \
   "$REVIEW_PROMPT" \
   2>&1 | tee "$REVIEW_LOG" || true
 
@@ -88,7 +91,6 @@ echo "OpenCode review completed."
 # ---------------------------------------------------------------------------
 if [ ! -f "$RESULT_FILE" ]; then
   echo "[WARN] OpenCode did not produce $RESULT_FILE. Creating fallback result."
-  cat "$REVIEW_LOG"
   cat > "$RESULT_FILE" << 'EOF'
 {
   "summary": "AI review agent did not produce structured output. Check review log for details.",
@@ -100,7 +102,7 @@ if [ ! -f "$RESULT_FILE" ]; then
       "line": null,
       "message": "The AI review agent completed but did not write a result file. This may indicate a prompt issue or model error. Manual review recommended.",
       "spec_reference": "",
-      "suggestion": "Check /tmp/review_output.log for the raw agent output."
+      "suggestion": "Check .opencode/review_output.log for the raw agent output."
     }
   ],
   "spec_update_needed": false,

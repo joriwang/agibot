@@ -27,12 +27,14 @@ exempt_patterns:
   - ".gitignore"
 
 # AI review model configuration
+# All models accessed via OpenRouter provider
 # Override in GitLab CI/CD Variables: OPENCODE_MODEL
+provider: openrouter
 models:
-  default: openrouter/anthropic/claude-sonnet-4.5
+  default: openrouter/anthropic/claude-sonnet-4.6
   alternatives:
-    - google/gemini-3.1-pro
-    - qwen/qwen3.5-397b-a17b
+    - openrouter/google/gemini-3.1-pro
+    - openrouter/qwen/qwen3.5-397b-a17b
 
 # Cost control
 max_iterations: 30

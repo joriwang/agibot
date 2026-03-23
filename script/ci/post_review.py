@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Post AI review results as a GitLab Merge Request comment.
-Reads /tmp/review_result.json and posts formatted Markdown to the MR.
+Reads .opencode/review_result.json and posts formatted Markdown to the MR.
 
 Environment variables required:
   - GITLAB_API_URL: GitLab API base URL (e.g., https://gitlab.example.com/api/v4)
@@ -15,7 +15,7 @@ import os
 import sys
 import requests
 
-RESULT_FILE = "/tmp/review_result.json"
+RESULT_FILE = ".opencode/review_result.json"
 OVERRIDE_COMMAND = "/ai-review-override"
 
 
@@ -156,7 +156,7 @@ def format_comment(result, overridden=False, override_author=None):
             f"`{OVERRIDE_COMMAND} reason: <说明>`*"
         )
     lines.append(
-        f"*Model: `{os.getenv('OPENCODE_MODEL', 'anthropic/claude-sonnet-4-6')}`*"
+        f"*Model: `{os.getenv('OPENCODE_MODEL', 'openrouter/anthropic/claude-sonnet-4.6')}`*"
     )
 
     return "\n".join(lines)

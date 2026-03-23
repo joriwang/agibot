@@ -1,0 +1,20 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "openrouter": {
+      "options": {
+        "apiKey": "{env:OPENROUTER_API_KEY}"
+      },
+      "models": {
+        "anthropic/claude-sonnet-4.6": {
+          "name": "Claude Sonnet 4.6 via OpenRouter",
+          "id": "anthropic/claude-sonnet-4.6",
+          "toolCallSupport": true
+        }
+      }
+    }
+  },
+  "model": "openrouter/anthropic/claude-sonnet-4.6",
+  "enabled_providers": ["openrouter"],
+  "default_agent": "review"
+}

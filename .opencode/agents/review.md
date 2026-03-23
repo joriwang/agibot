@@ -105,7 +105,7 @@ Also check for:
 
 ## Output Format
 
-After completing your review, write your findings to `/tmp/review_result.json` in this exact JSON format:
+After completing your review, write your findings to `.opencode/review_result.json` in this exact JSON format:
 
 ```json
 {
@@ -138,7 +138,7 @@ NEVER mark general code quality issues as CRITICAL. When in doubt, use WARNING.
 
 ## Important Rules
 
-- You are READ-ONLY. Do not create, modify, or delete any files except `/tmp/review_result.json`.
+- You are READ-ONLY. Do not create, modify, or delete any files except `.opencode/review_result.json`.
 - Always read the actual spec files — do not rely on memory or assumptions about their content.
 - If you cannot find a relevant spec, note this in your findings as INFO.
 - Be precise: include file paths and line numbers when possible.

@@ -78,7 +78,7 @@ Stage 1 的 spec 同步检查会跳过。
 
 | 值 | 模型 | 说明 |
 |----|------|------|
-| `anthropic/claude-sonnet-4-6` | Claude Sonnet 4.6（默认） | 结构化输出最稳定 |
+| `anthropic/claude-sonnet-4.6` | Claude Sonnet 4.6（默认） | 结构化输出最稳定 |
 | `google/gemini-3.1-pro` | Gemini 3.1 Pro | 编码能力略强，成本略低 |
 | `qwen/qwen3.5-397b-a17b` | Qwen3.5 397B | 成本最低 |
 
