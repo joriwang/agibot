@@ -3,7 +3,7 @@ description: >
   Dedicated code review agent for CI/CD pipelines. Performs spec-driven review
   of merge request diffs against project specification documents. Read-only mode —
   cannot modify any files.
-model: anthropic/claude-sonnet-4-6
+model: openrouter/anthropic/claude-sonnet-4.6
 temperature: 0
 maxIterations: 30
 mode: subagent

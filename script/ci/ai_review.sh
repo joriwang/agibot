@@ -88,6 +88,7 @@ echo "OpenCode review completed."
 # ---------------------------------------------------------------------------
 if [ ! -f "$RESULT_FILE" ]; then
   echo "[WARN] OpenCode did not produce $RESULT_FILE. Creating fallback result."
+  cat "$REVIEW_LOG"
   cat > "$RESULT_FILE" << 'EOF'
 {
   "summary": "AI review agent did not produce structured output. Check review log for details.",
