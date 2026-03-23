@@ -57,7 +57,6 @@ ai-review:
     - export HTTPS_PROXY="${NET_PROXY}"
   script:
     - opencode agent list | grep review
-    - curl https://www.google.com
     - bash script/ci/ai_review.sh
   after_script:
     # Always try to post results, even if ai_review.sh failed
