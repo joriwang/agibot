@@ -27,7 +27,7 @@ echo ""
 cd "$PROJECT_ROOT"
 
 # Get diff
-DIFF=$(git diff origin/main...HEAD 2>/dev/null || echo "")
+DIFF=$(git diff HEAD^1 2>/dev/null || echo "")
 if [ -z "$DIFF" ]; then
   echo "[INFO] No diff detected. Skipping AI review."
   # Write a passing result
