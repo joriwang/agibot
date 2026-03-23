@@ -63,14 +63,14 @@ ai-review:
     # Always try to post results, even if ai_review.sh failed
     - |
       if [ -f .opencode/review_result.json ]; then
-        python3 scripts/ci/post_review.py
+        python3 script/ci/post_review.py
       fi
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_PIPELINE_SOURCE == "push"'
   allow_failure: false
   variables:
-    # Pass MR info to scripts
+    # Pass MR info to script
     MR_IID: "${CI_MERGE_REQUEST_IID}"
     MR_PROJECT_ID: "${CI_PROJECT_ID}"
     MR_SOURCE_BRANCH: "${CI_MERGE_REQUEST_SOURCE_BRANCH_SHA}"
