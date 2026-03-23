@@ -42,7 +42,7 @@ EOF
   exit 0
 fi
 
-CHANGED_FILES=$(git diff --name-only origin/main...HEAD 2>/dev/null || echo "")
+CHANGED_FILES=$(git diff --name-only HEAD^1 2>/dev/null || echo "")
 echo "Changed files for review:"
 echo "$CHANGED_FILES" | sed 's/^/  /'
 echo ""
@@ -53,13 +53,13 @@ echo ""
 # The review agent already knows its role (defined in .opencode/agents/review.md).
 # We only need to tell it what to review.
 
-REVIEW_PROMPT="Review the current merge request. The diff is between origin/main and HEAD.
+REVIEW_PROMPT="Review the current merge request. The diff is between HEAD^1 and HEAD.
 
 Changed files:
 ${CHANGED_FILES}
 
 Instructions:
-1. Run \`git diff origin/main...HEAD\` to see the full diff.
+1. Run \`git diff HEAD^1\` to see the full diff.
 2. Read the spec files that correspond to the changed modules.
 3. Read \`spec/bugs.md\` for known bug patterns.
 4. Perform the four-category review as defined in your agent instructions.
