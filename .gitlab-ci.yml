@@ -49,8 +49,15 @@ ai-review:
       optional: false
   before_script:
     - pip3 install -i http://mirrors.weichai.com/repository/pypi/simple/ --trusted-host mirrors.weichai.com requests -q
+    - export NO_PROXY="${NET_NO_PROXY}"
+    - export no_proxy="${NET_NO_PROXY}"
+    - export http_proxy="${NET_PROXY}"
+    - export https_proxy="${NET_PROXY}"
+    - export HTTP_PROXY="${NET_PROXY}"
+    - export HTTPS_PROXY="${NET_PROXY}"
   script:
     - opencode agent list | grep review
+    - curl https://www.google.com
     - bash script/ci/ai_review.sh
   after_script:
     # Always try to post results, even if ai_review.sh failed
