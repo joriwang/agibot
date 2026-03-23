@@ -50,7 +50,7 @@ ai-review:
     - pip3 install -i http://mirrors.weichai.com/repository/pypi/simple/ --trusted-host mirrors.weichai.com requests -q
     - git diff
     - git diff HEAD^1
-    - git diff HEAD^2
+    - git diff HEAD~2
     # Configure OpenCode authentication
     - |
       mkdir -p ~/.local/share/opencode
