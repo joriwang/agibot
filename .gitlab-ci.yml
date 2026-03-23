@@ -47,7 +47,7 @@ ai-review:
     - job: spec-sync-check
       optional: false
   before_script:
-    - pip3 install -i http://mirrors.weichai.com/repository/pypi/simple/ --trusted-host mirrors.weichai.com requests --break-system-packages -q
+    - pip3 install -i http://mirrors.weichai.com/repository/pypi/simple/ --trusted-host mirrors.weichai.com requests -q
     # Configure OpenCode authentication
     - |
       mkdir -p ~/.local/share/opencode
