@@ -57,6 +57,7 @@ ai-review:
       }
       EOF
   script:
+    - opencode agent list | grep review
     - bash script/ci/ai_review.sh
   after_script:
     # Always try to post results, even if ai_review.sh failed

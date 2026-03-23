@@ -76,7 +76,6 @@ echo ""
 # Use opencode run with the review agent in non-interactive mode
 opencode run \
   --agent review \
-  --provider "$(echo "$MODEL" | cut -d/ -f1)" \
   --model "$(echo "$MODEL" | cut -d/ -f2-)" \
   "$REVIEW_PROMPT" \
   2>&1 | tee "$REVIEW_LOG" || true
