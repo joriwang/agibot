@@ -78,7 +78,7 @@ actuator_list:  # 执行器列表
   - right_claw_actuator
 
 ethercat:
-  ifname: enp2s0          # 网卡名
+  ifname: ens33          # 网卡名
   bind_cpu: 9             # 绑定CPU核心
   rt_priority: 90         # 线程优先级
   enable_dc: true         # 使能DC同步
