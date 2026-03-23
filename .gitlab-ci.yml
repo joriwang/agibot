@@ -44,6 +44,8 @@ spec-sync-check:
   variables:
     MR_IID: "${CI_MERGE_REQUEST_IID}"
     MR_PROJECT_ID: "${CI_PROJECT_ID}"
+    MR_SOURCE_BRANCH: "${CI_MERGE_REQUEST_SOURCE_BRANCH_SHA}"
+    MR_TARGET_BRANCH: "${CI_MERGE_REQUEST_TARGET_BRANCH_SHA}"
     PRIVATE_TOKEN: "${CICD_TOKEN}"
 
 # ---------------------------------------------------------------------------
