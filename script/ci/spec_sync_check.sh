@@ -5,6 +5,8 @@
 # =============================================================================
 set -euo pipefail
 
+RESULT_FILE=".opencode/review_result.json"
+
 # ---------------------------------------------------------------------------
 # Configuration: source path → spec file mapping
 # ---------------------------------------------------------------------------
@@ -191,6 +193,46 @@ if [ ${#ERRORS[@]} -gt 0 ]; then
   for e in "${ERRORS[@]}"; do
     echo "  ❌ $e"
   done
+fi
+
+# ---------------------------------------------------------------------------
+# Write result JSON for post_review.py
+# ---------------------------------------------------------------------------
+mkdir -p .opencode
+
+# Build findings JSON entries (pure bash + sed, no Python dependency here)
+findings_json=""
+for e in "${ERRORS[@]+"${ERRORS[@]}"}"; do
+  e_esc=$(printf '%s' "$e" | sed 's/\\/\\\\/g; s/"/\\"/g')
+  findings_json="${findings_json}{\"severity\":\"CRITICAL\",\"category\":\"spec_sync\",\"file\":\"\",\"line\":null,\"message\":\"${e_esc}\",\"spec_reference\":\"\",\"suggestion\":\"Update the spec file, or add [spec-exempt] to MR description with justification.\"},"
+done
+for w in "${WARNINGS[@]+"${WARNINGS[@]}"}"; do
+  w_esc=$(printf '%s' "$w" | sed 's/\\/\\\\/g; s/"/\\"/g')
+  findings_json="${findings_json}{\"severity\":\"WARNING\",\"category\":\"spec_sync\",\"file\":\"\",\"line\":null,\"message\":\"${w_esc}\",\"spec_reference\":\"\",\"suggestion\":\"\"},"
+done
+findings_json="[${findings_json%,}]"
+
+if [ ${#ERRORS[@]} -gt 0 ]; then
+  summary="Spec sync check FAILED: ${#ERRORS[@]} error(s), ${#WARNINGS[@]} warning(s)."
+elif [ ${#WARNINGS[@]} -gt 0 ]; then
+  summary="Spec sync check passed with ${#WARNINGS[@]} warning(s)."
+else
+  summary="Spec sync check passed. All checks OK."
+fi
+
+cat > "$RESULT_FILE" << EOF
+{
+  "summary": "${summary}",
+  "findings": ${findings_json},
+  "spec_update_needed": false,
+  "spec_update_details": ""
+}
+EOF
+
+echo ""
+echo "Result written to ${RESULT_FILE}."
+
+if [ ${#ERRORS[@]} -gt 0 ]; then
   echo ""
   echo "=== FAILED ==="
   echo "Fix the above errors, or add [spec-exempt] to MR description with justification."

@@ -24,15 +24,29 @@ variables:
 # ---------------------------------------------------------------------------
 spec-sync-check:
   stage: spec-sync-check
-  image: itools-harbor.weichai.com/hub/alpine:3.20-git
+  image: itools-harbor.weichai.com/common/ubuntu:22.04-opencode1.2.27-node22.22.1-git2.34.1-python3.10.12-pip3
   tags:
     - docker
     - 122-outer
+  before_script:
+    - pip3 install -i http://mirrors.weichai.com/repository/pypi/simple/ --trusted-host mirrors.weichai.com requests -q
   script:
     - bash ./script/ci/spec_sync_check.sh
+  after_script:
+    # Always try to post results, even if spec_sync_check.sh failed
+    - |
+      if [ -f .opencode/review_result.json ]; then
+        python3 script/ci/post_review.py
+      fi
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
   allow_failure: false
+  variables:
+    MR_IID: "${CI_MERGE_REQUEST_IID}"
+    MR_PROJECT_ID: "${CI_PROJECT_ID}"
+    MR_SOURCE_BRANCH: "${CI_MERGE_REQUEST_SOURCE_BRANCH_SHA}"
+    MR_TARGET_BRANCH: "${CI_MERGE_REQUEST_TARGET_BRANCH_SHA}"
+    PRIVATE_TOKEN: "${CICD_TOKEN}"
 
 # ---------------------------------------------------------------------------
 # Stage 2: AI-Powered Deep Review (OpenCode + Claude Sonnet)
